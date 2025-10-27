@@ -49,25 +49,14 @@ class GameController extends ChangeNotifier {
         _availableBlocks = Block.generateRandomBlocks();
       }
 
-      // 게임오버 체크
-      if (!_board.hasValidMove(_availableBlocks)) {
-        _gameOver = true;
-      }
+      // 게임오버 체크 (성능 최적화를 위해 마지막에 실행)
+      _checkGameOver();
 
       notifyListeners();
       return true;
     }
 
     return false;
-  }
-
-  bool canPlaceAtPosition(int row, int col) {
-    if (_selectedBlock == null) return false;
-    return _board.canPlaceBlock(_selectedBlock!, row, col);
-  }
-
-  bool canPlaceBlockAt(Block block, int row, int col) {
-    return _board.canPlaceBlock(block, row, col);
   }
 
   bool tryPlaceBlockWithDrag(Block block, int row, int col) {
@@ -86,14 +75,27 @@ class GameController extends ChangeNotifier {
       }
 
       // 게임오버 체크
-      if (!_board.hasValidMove(_availableBlocks)) {
-        _gameOver = true;
-      }
+      _checkGameOver();
 
       notifyListeners();
       return true;
     }
 
     return false;
+  }
+
+  void _checkGameOver() {
+    if (!_board.hasValidMove(_availableBlocks)) {
+      _gameOver = true;
+    }
+  }
+
+  bool canPlaceAtPosition(int row, int col) {
+    if (_selectedBlock == null) return false;
+    return _board.canPlaceBlock(_selectedBlock!, row, col);
+  }
+
+  bool canPlaceBlockAt(Block block, int row, int col) {
+    return _board.canPlaceBlock(block, row, col);
   }
 }

@@ -21,16 +21,16 @@ class BlockWidget extends StatelessWidget {
       feedback: Material(
         color: Colors.transparent,
         child: Transform.scale(
-          scale: 0.8,
+          scale: 1.1, // 약간 더 크게
           child: Container(
             decoration: BoxDecoration(
               color: Colors.orange[300],
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: BorderRadius.circular(12.0), // 더 둥근 모서리
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
+                  color: Colors.black.withOpacity(0.4),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
                 ),
               ],
             ),
@@ -39,31 +39,48 @@ class BlockWidget extends StatelessWidget {
           ),
         ),
       ),
-      childWhenDragging: Opacity(opacity: 0.3, child: _buildBlockContainer()),
-      child: GestureDetector(
-        onTap: () {
-          if (isSelected) {
-            controller.deselectBlock();
-          } else {
-            controller.selectBlock(block);
-          }
-        },
-        child: _buildBlockContainer(),
+      childWhenDragging: Opacity(
+        opacity: 0.4,
+        child: Transform.scale(scale: 0.9, child: _buildBlockContainer()),
+      ),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        child: GestureDetector(
+          onTap: () {
+            if (isSelected) {
+              controller.deselectBlock();
+            } else {
+              controller.selectBlock(block);
+            }
+          },
+          child: _buildBlockContainer(),
+        ),
       ),
     );
   }
 
   Widget _buildBlockContainer() {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
       padding: const EdgeInsets.all(8.0),
       margin: const EdgeInsets.all(4.0),
       decoration: BoxDecoration(
         color: isSelected ? Colors.orange[200] : Colors.grey[100],
-        borderRadius: BorderRadius.circular(8.0),
+        borderRadius: BorderRadius.circular(12.0),
         border: Border.all(
-          color: isSelected ? Colors.orange : Colors.grey,
-          width: 2.0,
+          color: isSelected ? Colors.orange[600]! : Colors.grey[400]!,
+          width: isSelected ? 3.0 : 1.5,
         ),
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                  color: Colors.orange.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
       ),
       child: _buildBlockGrid(),
     );

@@ -54,8 +54,10 @@ class GameBoard {
 
   void clearCompletedLines() {
     int clearedLines = 0;
+    List<int> rowsToRemove = [];
+    List<int> colsToRemove = [];
 
-    // 가로줄 체크
+    // 가로줄 체크 - 한 번에 수집
     for (int row = 0; row < size; row++) {
       bool isComplete = true;
       for (int col = 0; col < size; col++) {
@@ -65,14 +67,11 @@ class GameBoard {
         }
       }
       if (isComplete) {
-        for (int col = 0; col < size; col++) {
-          grid[row][col] = false;
-        }
-        clearedLines++;
+        rowsToRemove.add(row);
       }
     }
 
-    // 세로줄 체크
+    // 세로줄 체크 - 한 번에 수집
     for (int col = 0; col < size; col++) {
       bool isComplete = true;
       for (int row = 0; row < size; row++) {
@@ -82,11 +81,23 @@ class GameBoard {
         }
       }
       if (isComplete) {
-        for (int row = 0; row < size; row++) {
-          grid[row][col] = false;
-        }
-        clearedLines++;
+        colsToRemove.add(col);
       }
+    }
+
+    // 한 번에 제거
+    for (int row in rowsToRemove) {
+      for (int col = 0; col < size; col++) {
+        grid[row][col] = false;
+      }
+      clearedLines++;
+    }
+
+    for (int col in colsToRemove) {
+      for (int row = 0; row < size; row++) {
+        grid[row][col] = false;
+      }
+      clearedLines++;
     }
 
     // 완성된 줄 보너스 점수
@@ -126,58 +137,43 @@ class Block {
   }
 
   static List<Block> generateRandomBlocks() {
-    List<List<List<bool>>> blockShapes = [
+    // 난이도별 블록 그룹
+    List<List<List<bool>>> easyBlocks = [
       // 1x1 정사각형
       [
         [true],
       ],
-
-      // 2x2 정사각형
-      [
-        [true, true],
-        [true, true],
-      ],
-
-      // 3x3 정사각형
-      [
-        [true, true, true],
-        [true, true, true],
-        [true, true, true],
-      ],
-
       // 1x2 가로
       [
         [true, true],
       ],
-
-      // 1x3 가로
-      [
-        [true, true, true],
-      ],
-
-      // 1x4 가로
-      [
-        [true, true, true, true],
-      ],
-
-      // 1x5 가로
-      [
-        [true, true, true, true, true],
-      ],
-
       // 2x1 세로
       [
         [true],
         [true],
       ],
-
+      // 1x3 가로
+      [
+        [true, true, true],
+      ],
       // 3x1 세로
       [
         [true],
         [true],
         [true],
       ],
+    ];
 
+    List<List<List<bool>>> mediumBlocks = [
+      // 2x2 정사각형
+      [
+        [true, true],
+        [true, true],
+      ],
+      // 1x4 가로
+      [
+        [true, true, true, true],
+      ],
       // 4x1 세로
       [
         [true],
@@ -185,7 +181,33 @@ class Block {
         [true],
         [true],
       ],
+      // 작은 L 모양들
+      [
+        [true, false],
+        [true, true],
+      ],
+      [
+        [false, true],
+        [true, true],
+      ],
+      // T 모양
+      [
+        [true, true, true],
+        [false, true, false],
+      ],
+    ];
 
+    List<List<List<bool>>> hardBlocks = [
+      // 3x3 정사각형
+      [
+        [true, true, true],
+        [true, true, true],
+        [true, true, true],
+      ],
+      // 1x5 가로
+      [
+        [true, true, true, true, true],
+      ],
       // 5x1 세로
       [
         [true],
@@ -194,51 +216,26 @@ class Block {
         [true],
         [true],
       ],
-
-      // L 모양 (왼쪽)
+      // 큰 L 모양들
       [
         [true, false],
         [true, false],
         [true, true],
       ],
-
-      // L 모양 (오른쪽)
       [
         [false, true],
         [false, true],
         [true, true],
       ],
-
-      // T 모양
-      [
-        [true, true, true],
-        [false, true, false],
-      ],
-
-      // 작은 L (왼쪽)
-      [
-        [true, false],
-        [true, true],
-      ],
-
-      // 작은 L (오른쪽)
-      [
-        [false, true],
-        [true, true],
-      ],
-
-      // 계단 모양 (왼쪽)
+      // 계단 모양들
       [
         [true, true, false],
         [false, true, true],
       ],
-
-      // 계단 모양 (오른쪽)
       [
         [false, true, true],
         [true, true, false],
       ],
-
       // 십자 모양
       [
         [false, true, false],
@@ -249,19 +246,24 @@ class Block {
 
     final random = Random();
     List<Block> blocks = [];
-    List<int> availableIndices = List.generate(
-      blockShapes.length,
-      (index) => index,
-    );
+
+    // 균형 잡힌 블록 선택 (쉬운:보통:어려운 = 50:35:15)
+    List<int> weights = [50, 35, 15]; // 백분율
 
     for (int i = 0; i < 3; i++) {
-      if (availableIndices.isEmpty) {
-        availableIndices = List.generate(blockShapes.length, (index) => index);
+      int randomWeight = random.nextInt(100);
+      List<List<List<bool>>> selectedGroup;
+
+      if (randomWeight < weights[0]) {
+        selectedGroup = easyBlocks;
+      } else if (randomWeight < weights[0] + weights[1]) {
+        selectedGroup = mediumBlocks;
+      } else {
+        selectedGroup = hardBlocks;
       }
 
-      int randomIndex = random.nextInt(availableIndices.length);
-      int shapeIndex = availableIndices.removeAt(randomIndex);
-      blocks.add(Block(blockShapes[shapeIndex], i));
+      int randomIndex = random.nextInt(selectedGroup.length);
+      blocks.add(Block(selectedGroup[randomIndex], i));
     }
 
     return blocks;

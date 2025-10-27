@@ -136,8 +136,9 @@ class _GameBoardWidgetState extends State<GameBoardWidget> {
   }
 
   void _updateHoverPosition(Offset position) {
-    // 보드 위젯의 RenderBox를 가져와서 로컬 좌표로 변환
-    final RenderBox renderBox = context.findRenderObject() as RenderBox;
+    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+
     final localPosition = renderBox.globalToLocal(position);
 
     // 패딩 고려
@@ -151,10 +152,12 @@ class _GameBoardWidgetState extends State<GameBoardWidget> {
       int row = (adjustedY / (cellSize + 1)).floor();
 
       if (col >= 0 && col < 10 && row >= 0 && row < 10) {
-        setState(() {
-          hoveredRow = row;
-          hoveredCol = col;
-        });
+        if (hoveredRow != row || hoveredCol != col) {
+          setState(() {
+            hoveredRow = row;
+            hoveredCol = col;
+          });
+        }
       }
     }
   }
